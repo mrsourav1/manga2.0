@@ -1,0 +1,33 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis-data:/data
+
+  backend:
+    build:
+      context: ./mangaApp-backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./mangaApp-backend/.env
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    ports:
+      - "5001:5001"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis-data:
