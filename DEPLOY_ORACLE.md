@@ -34,7 +34,30 @@ chmod +x scripts/deploy-backend.sh
 docker compose logs -f backend
 ```
 
-## 5. Verify it is healthy
+## 5. Configure GitHub Actions CI/CD
+
+The workflow in `.github/workflows/ci-cd.yml` runs app and backend checks for every pull request and push. A successful push to `main` deploys the backend automatically.
+
+Add these repository secrets in GitHub under **Settings > Secrets and variables > Actions**:
+
+| Secret | Value |
+| --- | --- |
+| `OCI_HOST` | The VM reserved public IP |
+| `OCI_USER` | `ubuntu` |
+| `OCI_SSH_PRIVATE_KEY` | A dedicated private deployment key |
+| `OCI_KNOWN_HOSTS` | The VM's pinned SSH host-key line |
+
+The deployment:
+
+- uploads only Docker/backend files;
+- keeps `mangaApp-backend/.env` on the VM;
+- keeps the existing `manga_redis-data` Docker volume;
+- builds before switching the running container;
+- checks `/health` and rolls back the source if deployment fails.
+
+You can also run it manually from the GitHub **Actions** tab using **Run workflow**.
+
+## 6. Verify it is healthy
 
 ```bash
 curl http://127.0.0.1:5001/health
@@ -42,7 +65,7 @@ curl http://127.0.0.1:5001/api/manga/status/source
 curl "http://127.0.0.1:5001/api/manga?page=1"
 ```
 
-## 6. Point the mobile app to the server
+## 7. Point the mobile app to the server
 
 Set your app backend URL to:
 
