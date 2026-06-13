@@ -1,0 +1,33 @@
+# macOS and editor state
+.DS_Store
+.vscode/
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+
+# JavaScript dependencies and generated output
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native build output
+build/
+.gradle/
+.kotlin/
+.cxx/
+Pods/
+DerivedData/
+*.apk
+*.aab
+*.ipa
+*.jsbundle
+
+# Logs and temporary UI inspection dumps
+*.log
+/homecheck.xml
+/view.xml
+/view2.xml
