@@ -15,7 +15,7 @@ import { getReaderImageUri } from '../../services/imageUrls';
 import { getChapter } from '../../services/mangaServices';
 
 const appOpenAdUnitId =
-  __DEV__ ? TestIds.APP_OPEN : Constants?.expoConfig?.extra?.adUnitOpen || process.env.adUnitOpen;
+  __DEV__ ? TestIds.APP_OPEN : Constants?.expoConfig?.extra?.adUnitOpen || process.env.AD_UNIT_OPEN;
 
 type ChapterResponse = {
   title: string | null;

@@ -20,7 +20,7 @@ import { useColorScheme } from '../hooks/useColorScheme';
 import { getHomePage, searchManga } from '../services/mangaServices';
 const bannerAdUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : Constants?.expoConfig?.extra?.adUnitBanner || process.env.AD_UNIT_BANNER;
 
-const appOpenAdUnitId = __DEV__ ? TestIds.APP_OPEN : Constants?.expoConfig?.extra?.adUnitOpen || process.env.adUnitOpen;
+const appOpenAdUnitId = __DEV__ ? TestIds.APP_OPEN : Constants?.expoConfig?.extra?.adUnitOpen || process.env.AD_UNIT_OPEN;
 
 
 interface Manga {
