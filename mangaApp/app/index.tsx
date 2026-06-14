@@ -12,16 +12,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { AdEventType, AppOpenAd, BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import MangaCard from '../components/MangaCard';
 import "../global.css";
 import { useColorScheme } from '../hooks/useColorScheme';
 import { getHomePage, searchManga } from '../services/mangaServices';
 const bannerAdUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : Constants?.expoConfig?.extra?.adUnitBanner || process.env.AD_UNIT_BANNER;
-
-const appOpenAdUnitId = __DEV__ ? TestIds.APP_OPEN : Constants?.expoConfig?.extra?.adUnitOpen || process.env.AD_UNIT_OPEN;
-
 
 interface Manga {
   mangaId: string;
@@ -171,32 +168,6 @@ export default function Index() {
   useEffect(() => {
     void fetchHomePage(1);
   }, [fetchHomePage]);
-
-  useEffect(() => {
-    const appOpenAd = AppOpenAd.createForAdRequest(appOpenAdUnitId);
-
-    const loadAd = async () => {
-      await appOpenAd.load();
-    };
-
-    const showAd = () => {
-      if (appOpenAd.loaded) {
-        appOpenAd.show();
-      }
-    };
-
-    const unsubscribe = appOpenAd.addAdEventListener(AdEventType.LOADED, showAd);
-    const unsubscribeError = appOpenAd.addAdEventListener(AdEventType.ERROR, (error) => {
-      console.log('Home app-open ad failed to load', error);
-    });
-
-    loadAd();
-
-    return () => {
-      unsubscribe();
-      unsubscribeError();
-    };
-  }, []);
 
   const refreshHome = () => {
     setPage(0);

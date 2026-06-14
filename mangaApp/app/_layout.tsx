@@ -2,9 +2,10 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import mobileAds from 'react-native-google-mobile-ads';
 import "../global.css";
+import AppOpenAdManager from '../components/AppOpenAdManager';
 import AppUpdatePrompt from '../components/AppUpdatePrompt';
 import { useColorScheme } from '../hooks/useColorScheme.web';
 
@@ -13,6 +14,7 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const [adsInitialized, setAdsInitialized] = useState(false);
 
   useEffect(() => {
     const initializeAds = async () => {
@@ -24,6 +26,7 @@ export default function RootLayout() {
         }
 
         await mobileAds().initialize();
+        setAdsInitialized(true);
       } catch (error) {
         console.log('Mobile Ads initialization failed', error);
       }
@@ -53,6 +56,7 @@ export default function RootLayout() {
           title:"Description"
         }} />
       </Stack>
+      <AppOpenAdManager adsInitialized={adsInitialized} />
       <AppUpdatePrompt />
       {/* <StatusBar style="auto" /> */}
     </ThemeProvider>

@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
 import { router, useLocalSearchParams } from 'expo-router';
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -8,14 +7,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { AdEventType, AppOpenAd, TestIds } from 'react-native-google-mobile-ads';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { getReaderImageUri } from '../../services/imageUrls';
 import { getChapter } from '../../services/mangaServices';
-
-const appOpenAdUnitId =
-  __DEV__ ? TestIds.APP_OPEN : Constants?.expoConfig?.extra?.adUnitOpen || process.env.AD_UNIT_OPEN;
 
 type ChapterResponse = {
   title: string | null;
@@ -258,28 +253,6 @@ export default function ChapterReader() {
 
     void fetchChapter();
   }, [currentChapterUrl]);
-
-  useEffect(() => {
-    const appOpenAd = AppOpenAd.createForAdRequest(appOpenAdUnitId);
-
-    const loadAd = async () => {
-      await appOpenAd.load();
-    };
-
-    const showAd = () => {
-      if (appOpenAd.loaded) {
-        appOpenAd.show();
-      }
-    };
-
-    const unsubscribe = appOpenAd.addAdEventListener(AdEventType.LOADED, showAd);
-
-    loadAd();
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   const html = useMemo(() => {
     if (!chapterData?.images?.length) return null;
