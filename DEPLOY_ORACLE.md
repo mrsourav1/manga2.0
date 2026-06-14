@@ -81,6 +81,15 @@ To publish:
 
 The workflow uploads `mangafy.apk`, updates `/api/app-update`, and installed Android apps offer the download on their next launch. Android still asks the user to approve the APK installation.
 
+If the GitHub **Run workflow** panel is unavailable, publish from the CLI:
+
+```bash
+git tag android-v1.1.0
+git push origin android-v1.1.0
+```
+
+Tag releases derive the Android build number from the semantic version and keep the minimum supported build at `1`.
+
 Keep the signing keystore backed up permanently. Future APKs signed with a different key cannot update existing installations.
 
 ## 7. Verify it is healthy

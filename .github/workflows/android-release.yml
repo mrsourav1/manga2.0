@@ -1,6 +1,9 @@
 name: Publish Android update
 
 on:
+  push:
+    tags:
+      - "android-v*"
   workflow_dispatch:
     inputs:
       version:
@@ -32,10 +35,10 @@ jobs:
       group: mangafy-android-release
       cancel-in-progress: false
     env:
-      VERSION: ${{ inputs.version }}
-      VERSION_CODE: ${{ inputs.version_code }}
-      MINIMUM_VERSION_CODE: ${{ inputs.minimum_supported_version_code }}
-      RELEASE_NOTES: ${{ inputs.release_notes }}
+      MANUAL_VERSION: ${{ inputs.version }}
+      MANUAL_VERSION_CODE: ${{ inputs.version_code }}
+      MANUAL_MINIMUM_VERSION_CODE: ${{ inputs.minimum_supported_version_code }}
+      MANUAL_RELEASE_NOTES: ${{ inputs.release_notes }}
       EXPO_PUBLIC_BACKEND_URL: ${{ format('http://{0}:5001', secrets.OCI_HOST) }}
       EXPO_PUBLIC_MANGA_URL: ${{ secrets.APP_MANGA_URL }}
       AD_UNIT_BANNER: ${{ secrets.APP_AD_UNIT_BANNER }}
@@ -52,6 +55,37 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Prepare release information
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            VERSION="$MANUAL_VERSION"
+            VERSION_CODE="$MANUAL_VERSION_CODE"
+            MINIMUM_VERSION_CODE="$MANUAL_MINIMUM_VERSION_CODE"
+            RELEASE_NOTES="$MANUAL_RELEASE_NOTES"
+          else
+            VERSION="${GITHUB_REF_NAME#android-v}"
+
+            if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Release tags must use android-vMAJOR.MINOR.PATCH." >&2
+              exit 1
+            fi
+
+            IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
+            VERSION_CODE=$((10#$MAJOR * 1000000 + 10#$MINOR * 1000 + 10#$PATCH))
+            MINIMUM_VERSION_CODE=1
+            RELEASE_NOTES="MangaFy ${VERSION}"
+          fi
+
+          {
+            echo "VERSION=$VERSION"
+            echo "VERSION_CODE=$VERSION_CODE"
+            echo "MINIMUM_VERSION_CODE=$MINIMUM_VERSION_CODE"
+            echo "RELEASE_NOTES<<MANGAFY_RELEASE_NOTES"
+            printf '%s\n' "$RELEASE_NOTES"
+            echo "MANGAFY_RELEASE_NOTES"
+          } >> "$GITHUB_ENV"
 
       - name: Validate release inputs
         run: |
