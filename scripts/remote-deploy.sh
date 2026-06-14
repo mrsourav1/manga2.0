@@ -48,6 +48,11 @@ fi
 tar -xzf "$ARCHIVE_PATH" -C "$STAGING_DIR"
 
 cp "$APP_DIR/mangaApp-backend/.env" "$STAGING_DIR/mangaApp-backend/.env"
+if [ -f "$APP_DIR/mangaApp-backend/config/app-update.json" ]; then
+  cp \
+    "$APP_DIR/mangaApp-backend/config/app-update.json" \
+    "$STAGING_DIR/mangaApp-backend/config/app-update.json"
+fi
 cp -a "$APP_DIR/mangaApp-backend" "$BACKUP_DIR/mangaApp-backend"
 cp -a "$APP_DIR/scripts" "$BACKUP_DIR/scripts"
 cp "$APP_DIR/docker-compose.yml" "$BACKUP_DIR/docker-compose.yml"

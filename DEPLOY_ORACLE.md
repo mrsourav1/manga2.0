@@ -57,7 +57,33 @@ The deployment:
 
 You can also run it manually from the GitHub **Actions** tab using **Run workflow**.
 
-## 6. Verify it is healthy
+## 6. Publish Android updates
+
+The **Publish Android update** workflow creates a signed APK and publishes it through GitHub Releases. Add these repository secrets once:
+
+| Secret | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | Base64-encoded permanent Android signing keystore |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_ALIAS` | Signing-key alias |
+| `ANDROID_KEY_PASSWORD` | Signing-key password |
+| `APP_AD_UNIT_BANNER` | Production banner ad unit |
+| `APP_AD_UNIT_OPEN` | Production app-open ad unit |
+| `APP_MANGA_URL` | Optional external manga URL |
+
+To publish:
+
+1. Open **Actions > Publish Android update > Run workflow**.
+2. Enter a semantic version such as `1.1.0`.
+3. Enter a `version_code` greater than every previous release.
+4. Set `minimum_supported_version_code` to force older builds to update.
+5. Add one release note per line.
+
+The workflow uploads `mangafy.apk`, updates `/api/app-update`, and installed Android apps offer the download on their next launch. Android still asks the user to approve the APK installation.
+
+Keep the signing keystore backed up permanently. Future APKs signed with a different key cannot update existing installations.
+
+## 7. Verify it is healthy
 
 ```bash
 curl http://127.0.0.1:5001/health
@@ -65,7 +91,7 @@ curl http://127.0.0.1:5001/api/manga/status/source
 curl "http://127.0.0.1:5001/api/manga?page=1"
 ```
 
-## 7. Point the mobile app to the server
+## 8. Point the mobile app to the server
 
 Set your app backend URL to:
 

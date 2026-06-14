@@ -80,6 +80,25 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+def releaseVersionCode = (findProperty("MANGAFY_VERSION_CODE") ?: "1").toString().toInteger()
+def releaseVersionName = (findProperty("MANGAFY_VERSION_NAME") ?: "1.0.0").toString()
+def releaseStoreFile = System.getenv("MANGAFY_RELEASE_STORE_FILE")
+def releaseStorePassword = System.getenv("MANGAFY_RELEASE_STORE_PASSWORD")
+def releaseKeyAlias = System.getenv("MANGAFY_RELEASE_KEY_ALIAS")
+def releaseKeyPassword = System.getenv("MANGAFY_RELEASE_KEY_PASSWORD")
+def hasReleaseSigning = [
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+].every { it }
+def isReleaseTask = gradle.startParameter.taskNames.any {
+    it.toLowerCase().contains("release")
+}
+
+if (isReleaseTask && !hasReleaseSigning) {
+    throw new GradleException("Release signing environment variables are required.")
+}
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -92,8 +111,8 @@ android {
         applicationId 'com.mrsourav1.MangaFy'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.0"
+        versionCode releaseVersionCode
+        versionName releaseVersionName
     }
     signingConfigs {
         debug {
@@ -102,15 +121,21 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"

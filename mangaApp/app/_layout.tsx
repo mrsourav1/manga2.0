@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import mobileAds from 'react-native-google-mobile-ads';
 import "../global.css";
+import AppUpdatePrompt from '../components/AppUpdatePrompt';
 import { useColorScheme } from '../hooks/useColorScheme.web';
 
 export default function RootLayout() {
@@ -52,6 +53,7 @@ export default function RootLayout() {
           title:"Description"
         }} />
       </Stack>
+      <AppUpdatePrompt />
       {/* <StatusBar style="auto" /> */}
     </ThemeProvider>
   );

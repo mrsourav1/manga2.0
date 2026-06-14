@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import appUpdateRouter from './routes/appUpdate.js';
 import mangaRouter from './routes/manga.js';
 import { closeCache } from './services/cache.js';
 import { getAllSourceHealth } from './services/sourceHealth.js';
@@ -80,6 +81,7 @@ app.get('/health', (_req, res) => {
 });
 
 // Routes
+app.use('/api/app-update', appUpdateRouter);
 app.use('/api/manga', mangaRouter);
 
 const server = app.listen(PORT, () => {

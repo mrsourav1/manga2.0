@@ -25,6 +25,8 @@ services:
       REDIS_URL: redis://redis:6379
     ports:
       - "5001:5001"
+    volumes:
+      - ./mangaApp-backend/config:/app/config:ro
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5001/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s

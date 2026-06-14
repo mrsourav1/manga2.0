@@ -13,6 +13,26 @@ const ensureBackendUrl = () => {
     }
 };
 
+export type AppUpdateInfo = {
+    enabled: boolean;
+    latestVersion: string;
+    latestBuildNumber: number;
+    minimumSupportedBuildNumber: number;
+    downloadUrl: string;
+    releaseNotes: string[];
+    publishedAt: string | null;
+};
+
+export const getAppUpdate = async (): Promise<AppUpdateInfo> => {
+    ensureBackendUrl();
+    const res = await api.get('/api/app-update', {
+        headers: {
+            'Cache-Control': 'no-cache',
+        },
+    });
+    return res.data;
+};
+
 export const getHomePage = async (page: number) => {
     ensureBackendUrl();
     const res = await api.get('/api/manga', {
