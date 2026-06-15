@@ -7,9 +7,10 @@ import {
   Linking,
   Modal,
   Platform,
-  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -117,37 +118,43 @@ export default function AppUpdatePrompt() {
             },
           ]}
         >
-          <View style={styles.iconWrap}>
-            <Ionicons color="#fff7ed" name="arrow-up-circle" size={36} />
-          </View>
-
-          <Text style={styles.eyebrow}>
-            {updateRequired ? 'UPDATE REQUIRED' : 'A NEW CHAPTER FOR THE APP'}
-          </Text>
-          <Text style={styles.title}>
-            MangaFy {update?.latestVersion} is ready
-          </Text>
-          <Text style={styles.description}>
-            Download the latest APK to get the newest improvements and fixes.
-          </Text>
-
-          {update?.releaseNotes.length ? (
-            <View style={styles.notes}>
-              {update.releaseNotes.slice(0, 4).map(note => (
-                <View key={note} style={styles.noteRow}>
-                  <View style={styles.noteDot} />
-                  <Text style={styles.noteText}>{note}</Text>
-                </View>
-              ))}
+          <ScrollView
+            bounces={false}
+            showsVerticalScrollIndicator={false}
+            style={styles.contentScroll}
+          >
+            <View style={styles.iconWrap}>
+              <Ionicons color="#fff7ed" name="arrow-up-circle" size={36} />
             </View>
-          ) : null}
 
-          <Pressable
+            <Text style={styles.eyebrow}>
+              {updateRequired ? 'UPDATE REQUIRED' : 'A NEW CHAPTER FOR THE APP'}
+            </Text>
+            <Text style={styles.title}>
+              MangaFy {update?.latestVersion} is ready
+            </Text>
+            <Text style={styles.description}>
+              Download the latest APK to get the newest improvements and fixes.
+            </Text>
+
+            {update?.releaseNotes.length ? (
+              <View style={styles.notes}>
+                {update.releaseNotes.slice(0, 4).map(note => (
+                  <View key={note} style={styles.noteRow}>
+                    <View style={styles.noteDot} />
+                    <Text style={styles.noteText}>{note}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </ScrollView>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
             disabled={isOpeningDownload}
             onPress={() => void openDownload()}
-            style={({ pressed }) => [
+            style={[
               styles.updateButton,
-              pressed && styles.buttonPressed,
               isOpeningDownload && styles.buttonDisabled,
             ]}
           >
@@ -155,18 +162,16 @@ export default function AppUpdatePrompt() {
             <Text style={styles.updateButtonText}>
               {isOpeningDownload ? 'Opening download…' : 'Download update'}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
 
           {!updateRequired ? (
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.7}
               onPress={dismissUpdate}
-              style={({ pressed }) => [
-                styles.laterButton,
-                pressed && styles.buttonPressed,
-              ]}
+              style={styles.laterButton}
             >
               <Text style={styles.laterButtonText}>Maybe later</Text>
-            </Pressable>
+            </TouchableOpacity>
           ) : (
             <Text style={styles.requiredText}>
               This version is no longer supported.
@@ -192,10 +197,15 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(251, 146, 60, 0.25)',
     borderRadius: 28,
     borderWidth: 1,
+    maxHeight: '92%',
     maxWidth: 520,
+    overflow: 'hidden',
     paddingHorizontal: 24,
-    paddingTop: 26,
     width: '100%',
+  },
+  contentScroll: {
+    flexShrink: 1,
+    paddingTop: 26,
   },
   iconWrap: {
     alignItems: 'center',
@@ -258,7 +268,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 9,
     justifyContent: 'center',
-    marginTop: 22,
+    marginTop: 18,
     minHeight: 54,
     paddingHorizontal: 18,
   },
@@ -282,9 +292,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 14,
     textAlign: 'center',
-  },
-  buttonPressed: {
-    opacity: 0.78,
   },
   buttonDisabled: {
     opacity: 0.58,

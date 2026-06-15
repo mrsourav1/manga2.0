@@ -4,7 +4,7 @@ export default {
   expo: {
     name: 'MangaFy',
     slug: 'MangaFy',
-    version: '1.1.0',
+    version: '1.1.1',
     orientation: 'portrait',
     scheme: 'com.sourav.mangafy',
     icon: './assets/images/adaptive-first.png',
