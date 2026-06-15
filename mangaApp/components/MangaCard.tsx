@@ -7,11 +7,19 @@ interface MangaCardProps {
     Img: string | null;
     name: string;
     chapter: string | null;
+    chapterNumber: number | null;
     mangaId: string;
     chapterUrl:string | null;
 }
 
-const MangaCard: React.FC<MangaCardProps> = ({ Img, name, chapter, mangaId, chapterUrl}) => {
+const MangaCard: React.FC<MangaCardProps> = ({
+    Img,
+    name,
+    chapter,
+    chapterNumber,
+    mangaId,
+    chapterUrl,
+}) => {
     const preferredImageUri = useMemo(() => getCardImageUri(Img), [Img]);
     const fallbackImageUri = useMemo(() => getOriginalImageUri(Img), [Img]);
     const [imageUri, setImageUri] = useState<string | null>(preferredImageUri || fallbackImageUri);
@@ -28,6 +36,13 @@ const MangaCard: React.FC<MangaCardProps> = ({ Img, name, chapter, mangaId, chap
             params: {
                 slug: [mangaId],
                 chapterUrl,
+                mangaTitle: name,
+                mangaCover: Img || '',
+                chapterTitle: chapter || '',
+                chapterNumber: chapterNumber != null ? String(chapterNumber) : '',
+                latestChapterUrl: chapterUrl,
+                latestChapterTitle: chapter || '',
+                latestChapterNumber: chapterNumber != null ? String(chapterNumber) : '',
             },
         });
     };
@@ -70,7 +85,7 @@ const MangaCard: React.FC<MangaCardProps> = ({ Img, name, chapter, mangaId, chap
 
                 <View className='mt-3 flex-row items-center justify-between gap-2'>
                     <Pressable
-                        onPress={chapterPageHandler}
+                        onPress={() => void chapterPageHandler()}
                         disabled={!chapterUrl}
                         className='flex-1 rounded-full bg-slate-700 px-3 py-2 dark:bg-slate-600'
                         style={{ opacity: chapterUrl ? 1 : 0.6 }}

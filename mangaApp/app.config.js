@@ -4,7 +4,7 @@ export default {
   expo: {
     name: 'MangaFy',
     slug: 'MangaFy',
-    version: '1.0.0',
+    version: '1.1.0',
     orientation: 'portrait',
     scheme: 'com.sourav.mangafy',
     icon: './assets/images/adaptive-first.png',
@@ -12,6 +12,7 @@ export default {
     newArchEnabled: true,
     plugins: [
       'expo-router',
+      'expo-sqlite',
       [
         'expo-splash-screen',
         {

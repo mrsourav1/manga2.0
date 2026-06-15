@@ -9,7 +9,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
+import { useLibrary } from '../../context/LibraryContext';
+import type { LibraryMangaSnapshot } from '../../services/libraryDatabase';
 import { getReaderImageUri } from '../../services/imageUrls';
+import { extractChapterNumber } from '../../services/librarySnapshots';
 import { getChapter } from '../../services/mangaServices';
 
 type ChapterResponse = {
@@ -104,18 +107,29 @@ const buildReaderHtml = (imageUrls: string[]) => {
           var hasPostedReady = false;
           var touchStart = null;
 
-          function postMessage(type) {
+          function postMessage(type, payload) {
             if (!window.ReactNativeWebView || !window.ReactNativeWebView.postMessage) {
               return;
             }
 
-            window.ReactNativeWebView.postMessage(JSON.stringify({ type: type }));
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: type,
+              payload: payload || null,
+            }));
           }
 
           function notifyReady() {
             if (hasPostedReady) return;
             hasPostedReady = true;
             postMessage('content-ready');
+          }
+
+          var hasPostedReadable = false;
+
+          function notifyReadable() {
+            if (hasPostedReadable) return;
+            hasPostedReadable = true;
+            postMessage('readable-content');
           }
 
           function trackImageLoads() {
@@ -136,11 +150,17 @@ const buildReaderHtml = (imageUrls: string[]) => {
 
             images.forEach(function (img) {
               if (img.complete) {
+                if (img.naturalWidth > 0) {
+                  notifyReadable();
+                }
                 markSettled();
                 return;
               }
 
-              img.addEventListener('load', markSettled, { once: true });
+              img.addEventListener('load', function () {
+                notifyReadable();
+                markSettled();
+              }, { once: true });
               img.addEventListener('error', markSettled, { once: true });
             });
 
@@ -191,6 +211,7 @@ const buildReaderHtml = (imageUrls: string[]) => {
 };
 
 export default function ChapterReader() {
+  const { recordProgress } = useLibrary();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [chapterData, setChapterData] = useState<ChapterResponse | null>(null);
@@ -198,10 +219,37 @@ export default function ChapterReader() {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const requestIdRef = useRef(0);
-  const { slug, chapterUrl } = useLocalSearchParams();
+  const recordedChapterUrlRef = useRef<string | null>(null);
+  const {
+    slug,
+    chapterUrl,
+    mangaTitle: mangaTitleParam,
+    mangaCover: mangaCoverParam,
+    latestChapterUrl: latestChapterUrlParam,
+    latestChapterTitle: latestChapterTitleParam,
+    latestChapterNumber: latestChapterNumberParam,
+  } = useLocalSearchParams();
 
   const mangaId = Array.isArray(slug) ? slug[0] : slug || 'reader';
   const currentChapterUrl = Array.isArray(chapterUrl) ? chapterUrl[0] : chapterUrl || '';
+  const mangaTitle = Array.isArray(mangaTitleParam)
+    ? mangaTitleParam[0]
+    : mangaTitleParam || String(mangaId);
+  const mangaCover = Array.isArray(mangaCoverParam)
+    ? mangaCoverParam[0]
+    : mangaCoverParam || null;
+  const latestChapterUrl = Array.isArray(latestChapterUrlParam)
+    ? latestChapterUrlParam[0]
+    : latestChapterUrlParam || null;
+  const latestChapterTitle = Array.isArray(latestChapterTitleParam)
+    ? latestChapterTitleParam[0]
+    : latestChapterTitleParam || null;
+  const latestChapterNumberValue = Array.isArray(latestChapterNumberParam)
+    ? latestChapterNumberParam[0]
+    : latestChapterNumberParam;
+  const parsedLatestChapterNumber = latestChapterNumberValue
+    ? Number.parseFloat(latestChapterNumberValue)
+    : null;
 
   useEffect(() => {
     requestIdRef.current += 1;
@@ -212,6 +260,7 @@ export default function ChapterReader() {
     setControlsVisible(true);
     setChapterData(null);
     setErrorMessage(null);
+    recordedChapterUrlRef.current = null;
 
     const fetchChapter = async () => {
       if (!currentChapterUrl) {
@@ -289,7 +338,56 @@ export default function ChapterReader() {
       params: {
         slug: [mangaId],
         chapterUrl: targetUrl,
+        mangaTitle,
+        mangaCover: mangaCover || '',
+        latestChapterUrl: latestChapterUrl || '',
+        latestChapterTitle: latestChapterTitle || '',
+        latestChapterNumber:
+          parsedLatestChapterNumber != null &&
+          Number.isFinite(parsedLatestChapterNumber)
+            ? String(parsedLatestChapterNumber)
+            : '',
       },
+    });
+  };
+
+  const recordCurrentChapter = () => {
+    if (
+      !chapterData ||
+      !currentChapterUrl ||
+      recordedChapterUrlRef.current === currentChapterUrl
+    ) {
+      return;
+    }
+
+    recordedChapterUrlRef.current = currentChapterUrl;
+    const chapterTitle = chapterData.title || 'Chapter';
+    const latestChapter =
+      latestChapterUrl && latestChapterTitle
+        ? {
+            url: latestChapterUrl,
+            title: latestChapterTitle,
+            chapterNumber:
+              parsedLatestChapterNumber != null &&
+              Number.isFinite(parsedLatestChapterNumber)
+                ? parsedLatestChapterNumber
+                : extractChapterNumber(latestChapterTitle, latestChapterUrl),
+          }
+        : null;
+    const mangaSnapshot: LibraryMangaSnapshot = {
+      mangaId: String(mangaId),
+      title: String(mangaTitle),
+      cover: mangaCover ? String(mangaCover) : null,
+      latestChapter,
+    };
+
+    void recordProgress(mangaSnapshot, {
+      url: currentChapterUrl,
+      title: chapterTitle,
+      chapterNumber: extractChapterNumber(chapterTitle, currentChapterUrl),
+    }).catch(error => {
+      recordedChapterUrlRef.current = null;
+      console.warn('Could not save reading progress', error);
     });
   };
 
@@ -299,6 +397,12 @@ export default function ChapterReader() {
 
       if (payload.type === 'content-ready') {
         setWebViewLoaded(true);
+        return;
+      }
+
+      if (payload.type === 'readable-content') {
+        setWebViewLoaded(true);
+        recordCurrentChapter();
         return;
       }
 

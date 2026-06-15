@@ -1,10 +1,13 @@
 import Constants from 'expo-constants';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import React, { startTransition, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from 'react-native';
+import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Image, Pressable, Text, View } from 'react-native';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import ChapterCard from '../../components/ChapterCard';
+import { useLibrary } from '../../context/LibraryContext';
+import type { LibraryStatus } from '../../services/libraryDatabase';
 import { getDetailImageUri, getOriginalImageUri } from '../../services/imageUrls';
+import { toChapterSnapshot, toLibrarySnapshot } from '../../services/librarySnapshots';
 import { getMangaDetails } from '../../services/mangaServices';
 
 const adUnitId =
@@ -30,12 +33,22 @@ type MangaData = {
 };
 
 const MangaDetail = () => {
+    const {
+        addManga,
+        getEntry,
+        isChapterRead,
+        removeManga,
+        setChapterRead,
+        syncManga,
+        updateStatus,
+    } = useLibrary();
     const { slug } = useLocalSearchParams();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<MangaData | null>(null);
     const [coverUri, setCoverUri] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const requestIdRef = useRef(0);
+    const syncedDetailsRef = useRef<string | null>(null);
     const mangaId = Array.isArray(slug) ? slug[0] : slug;
 
     useEffect(() => {
@@ -83,18 +96,91 @@ const MangaDetail = () => {
     const firstChapter = chapters[0] || null;
     const latestChapter = chapters[chapters.length - 1] || null;
     const orderedChapters = chapters.length > 1 ? [...chapters].reverse() : chapters;
+    const librarySnapshot = useMemo(
+        () => toLibrarySnapshot(data || {}),
+        [data]
+    );
+    const libraryEntry = mangaId ? getEntry(mangaId) : null;
 
-    const openChapter = (chapterUrl: string | null) => {
-        if (!chapterUrl) return;
+    useEffect(() => {
+        if (!libraryEntry || !librarySnapshot) return;
 
+        const syncKey = `${librarySnapshot.mangaId}:${data?.lastUpdated || ''}`;
+        if (syncedDetailsRef.current === syncKey) return;
+        syncedDetailsRef.current = syncKey;
+        void syncManga(librarySnapshot);
+    }, [data?.lastUpdated, libraryEntry, librarySnapshot, syncManga]);
+
+    const openChapter = async (chapter: Chapter | null) => {
+        const chapterSnapshot = chapter ? toChapterSnapshot(chapter) : null;
+        if (!chapterSnapshot || !librarySnapshot) return;
+
+        await addManga(librarySnapshot);
         router.push({
             pathname: '/manga/[...slug]',
             params: {
                 slug: [data?.mangaId || mangaId || ''],
-                chapterUrl,
+                chapterUrl: chapterSnapshot.url,
+                mangaTitle: librarySnapshot.title,
+                mangaCover: librarySnapshot.cover || '',
+                chapterTitle: chapterSnapshot.title,
+                chapterNumber:
+                    chapterSnapshot.chapterNumber != null
+                        ? String(chapterSnapshot.chapterNumber)
+                        : '',
+                latestChapterUrl: librarySnapshot.latestChapter?.url || '',
+                latestChapterTitle: librarySnapshot.latestChapter?.title || '',
+                latestChapterNumber:
+                    librarySnapshot.latestChapter?.chapterNumber != null
+                        ? String(librarySnapshot.latestChapter.chapterNumber)
+                        : '',
             },
         });
     };
+
+    const toggleLibrary = () => {
+        if (!librarySnapshot) return;
+
+        if (!libraryEntry) {
+            void addManga(librarySnapshot);
+            return;
+        }
+
+        Alert.alert(
+            'Remove from library?',
+            'Reading progress for this manga will also be removed from this device.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: () => void removeManga(librarySnapshot.mangaId),
+                },
+            ]
+        );
+    };
+
+    const handleChapterReadToggle = async (chapter: Chapter) => {
+        const chapterSnapshot = toChapterSnapshot(chapter);
+        if (!chapterSnapshot || !librarySnapshot) return;
+
+        if (!libraryEntry) {
+            await addManga(librarySnapshot);
+        }
+
+        await setChapterRead(
+            librarySnapshot.mangaId,
+            chapterSnapshot,
+            !isChapterRead(librarySnapshot.mangaId, chapterSnapshot.url)
+        );
+    };
+
+    const statuses: { value: LibraryStatus; label: string }[] = [
+        { value: 'reading', label: 'Reading' },
+        { value: 'completed', label: 'Completed' },
+        { value: 'on-hold', label: 'On hold' },
+        { value: 'dropped', label: 'Dropped' },
+    ];
 
     if (loading) {
         return (
@@ -194,6 +280,77 @@ const MangaDetail = () => {
 
                     <View
                         style={{
+                            marginHorizontal: 16,
+                            marginTop: 16,
+                            borderRadius: 20,
+                            borderWidth: 1,
+                            borderColor: libraryEntry ? 'rgba(96, 165, 250, 0.5)' : 'rgba(148, 163, 184, 0.16)',
+                            backgroundColor: libraryEntry ? '#172554' : '#0f172a',
+                            padding: 14,
+                        }}
+                    >
+                        <Pressable
+                            onPress={toggleLibrary}
+                            style={{
+                                minHeight: 48,
+                                borderRadius: 14,
+                                backgroundColor: libraryEntry ? '#1e3a8a' : '#2563eb',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>
+                                {libraryEntry ? 'Remove from Library' : 'Add to Library'}
+                            </Text>
+                        </Pressable>
+
+                        {libraryEntry ? (
+                            <>
+                                <Text
+                                    style={{
+                                        color: '#bfdbfe',
+                                        fontSize: 12,
+                                        fontWeight: '700',
+                                        marginTop: 14,
+                                        marginBottom: 8,
+                                    }}
+                                >
+                                    Reading status
+                                </Text>
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                                    {statuses.map(status => {
+                                        const selected = libraryEntry.status === status.value;
+
+                                        return (
+                                            <Pressable
+                                                key={status.value}
+                                                onPress={() => void updateStatus(libraryEntry.mangaId, status.value)}
+                                                style={{
+                                                    borderRadius: 999,
+                                                    backgroundColor: selected ? '#2563eb' : '#1e293b',
+                                                    paddingHorizontal: 12,
+                                                    paddingVertical: 8,
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        color: selected ? '#fff' : '#94a3b8',
+                                                        fontSize: 11,
+                                                        fontWeight: '800',
+                                                    }}
+                                                >
+                                                    {status.label}
+                                                </Text>
+                                            </Pressable>
+                                        );
+                                    })}
+                                </View>
+                            </>
+                        ) : null}
+                    </View>
+
+                    <View
+                        style={{
                             backgroundColor: '#334155',
                             marginHorizontal: 16,
                             marginTop: 16,
@@ -257,9 +414,39 @@ const MangaDetail = () => {
                         >
                             Jump to the latest chapter or begin from chapter one.
                         </Text>
+                        {libraryEntry?.lastReadChapterUrl ? (
+                            <Pressable
+                                onPress={() =>
+                                    void openChapter({
+                                        title: libraryEntry.lastReadChapterTitle || 'Continue reading',
+                                        url: libraryEntry.lastReadChapterUrl || '',
+                                        chapterNumber: libraryEntry.lastReadChapterNumber,
+                                        date: null,
+                                    })
+                                }
+                                style={{
+                                    minHeight: 52,
+                                    borderRadius: 14,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: '#059669',
+                                    marginBottom: 12,
+                                }}
+                            >
+                                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>
+                                    Continue Reading
+                                </Text>
+                                <Text
+                                    numberOfLines={1}
+                                    style={{ color: '#d1fae5', fontSize: 11, marginTop: 4 }}
+                                >
+                                    {libraryEntry.lastReadChapterTitle}
+                                </Text>
+                            </Pressable>
+                        ) : null}
                         <View style={{ flexDirection: 'row', gap: 12 }}>
                             <Pressable
-                                onPress={() => openChapter(latestChapter?.url || null)}
+                                onPress={() => void openChapter(latestChapter)}
                                 disabled={!latestChapter?.url}
                                 style={{
                                     flex: 1,
@@ -285,7 +472,7 @@ const MangaDetail = () => {
                             </Pressable>
 
                             <Pressable
-                                onPress={() => openChapter(firstChapter?.url || null)}
+                                onPress={() => void openChapter(firstChapter)}
                                 disabled={!firstChapter?.url}
                                 style={{
                                     flex: 1,
@@ -355,9 +542,10 @@ const MangaDetail = () => {
                     <View style={{ marginHorizontal: 16 }}>
                         <ChapterCard
                             name={item.title}
-                            url={item.url}
                             date={item.date}
-                            mangaId={data?.mangaId || mangaId || ''}
+                            isRead={isChapterRead(data?.mangaId || mangaId || '', item.url)}
+                            onPress={() => void openChapter(item)}
+                            onToggleRead={() => void handleChapterReadToggle(item)}
                         />
                     </View>
                 )}

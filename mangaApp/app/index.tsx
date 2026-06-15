@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import BottomNavigation from '../components/BottomNavigation';
 import MangaCard from '../components/MangaCard';
 import "../global.css";
 import { useColorScheme } from '../hooks/useColorScheme';
@@ -25,6 +26,7 @@ interface Manga {
   cover: string | null;
   title: string;
   latestChapter: string | null;
+  latestChapterNumber: number | null;
   chapterUrl: string | null;
 }
 
@@ -450,6 +452,7 @@ export default function Index() {
                     Img={item.cover}
                     name={item.title}
                     chapter={item.latestChapter}
+                    chapterNumber={item.latestChapterNumber}
                     mangaId={item.mangaId}
                     chapterUrl={item.chapterUrl}
                   />
@@ -498,6 +501,7 @@ export default function Index() {
               }}
             />
           </View>
+          <BottomNavigation active="home" />
         </SafeAreaView>
       </SafeAreaProvider>
     </>

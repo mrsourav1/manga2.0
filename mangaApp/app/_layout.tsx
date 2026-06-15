@@ -7,6 +7,7 @@ import mobileAds from 'react-native-google-mobile-ads';
 import "../global.css";
 import AppOpenAdManager from '../components/AppOpenAdManager';
 import AppUpdatePrompt from '../components/AppUpdatePrompt';
+import { LibraryProvider } from '../context/LibraryContext';
 import { useColorScheme } from '../hooks/useColorScheme.web';
 
 export default function RootLayout() {
@@ -41,24 +42,29 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="index"
-          options={{
-          title:"Home",
-          headerShown: true,
-        }} />
-        <Stack.Screen name="manga" options={{
-          headerShown: false,
-        }} />
-        <Stack.Screen name="mangaInfo" options={{
-          headerShown: true,
-          title:"Description"
-        }} />
-      </Stack>
-      <AppOpenAdManager adsInitialized={adsInitialized} />
-      <AppUpdatePrompt />
-      {/* <StatusBar style="auto" /> */}
-    </ThemeProvider>
+    <LibraryProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="index"
+            options={{
+            title:"Home",
+            headerShown: true,
+          }} />
+          <Stack.Screen name="library" options={{
+            headerShown: false,
+          }} />
+          <Stack.Screen name="manga" options={{
+            headerShown: false,
+          }} />
+          <Stack.Screen name="mangaInfo" options={{
+            headerShown: true,
+            title:"Description"
+          }} />
+        </Stack>
+        <AppOpenAdManager adsInitialized={adsInitialized} />
+        <AppUpdatePrompt />
+        {/* <StatusBar style="auto" /> */}
+      </ThemeProvider>
+    </LibraryProvider>
   );
 }

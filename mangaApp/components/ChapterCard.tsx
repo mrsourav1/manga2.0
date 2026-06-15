@@ -1,38 +1,64 @@
-import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 type Props = {
     name: string;
     date: string | null;
-    url: string;
-    mangaId: string;
+    isRead: boolean;
+    onPress: () => void;
+    onToggleRead: () => void;
 };
 
-const ChapterCard = ({ name, date, url, mangaId }: Props) => {
-    const mangaPageHandler = (chapterUrl: string) => {
-        router.push({
-            pathname: '/manga/[...slug]',
-            params: {
-                slug: [mangaId],
-                chapterUrl,
-            },
-        });
-    };
+const ChapterCard = ({
+    name,
+    date,
+    isRead,
+    onPress,
+    onToggleRead,
+}: Props) => {
     return (
-        <Pressable
-            onPress={() => mangaPageHandler(url)}
-            className="m-1 rounded-lg bg-slate-700 p-4"
+        <View
+            className="m-1 flex-row items-center rounded-xl bg-slate-700"
+            style={{ opacity: isRead ? 0.68 : 1 }}
         >
-            <Text className="text-white underline font-bold">
-                {name}
-            </Text>
-            {date ? (
-                <Text className="mt-2 self-end text-xs text-slate-300">
-                    Updated at: {date}
+            <Pressable
+                onPress={onPress}
+                style={{ flex: 1, padding: 16 }}
+            >
+                <Text
+                    numberOfLines={2}
+                    className="font-bold text-white"
+                    style={{ textDecorationLine: isRead ? 'line-through' : 'none' }}
+                >
+                    {name}
                 </Text>
-            ) : null}
-        </Pressable>
+                {date ? (
+                    <Text className="mt-2 text-xs text-slate-300">
+                        Updated at: {date}
+                    </Text>
+                ) : null}
+            </Pressable>
+            <Pressable
+                accessibilityLabel={isRead ? 'Mark chapter unread' : 'Mark chapter read'}
+                onPress={onToggleRead}
+                style={{
+                    width: 48,
+                    height: 48,
+                    marginRight: 8,
+                    borderRadius: 16,
+                    backgroundColor: isRead ? '#166534' : '#1e293b',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <Ionicons
+                    name={isRead ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={23}
+                    color={isRead ? '#bbf7d0' : '#cbd5e1'}
+                />
+            </Pressable>
+        </View>
     );
 };
 
