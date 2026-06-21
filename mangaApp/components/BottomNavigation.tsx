@@ -3,8 +3,10 @@ import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 type BottomNavigationProps = {
-  active: 'home' | 'library';
+  active: 'home' | 'history' | 'library';
 };
+
+type NavigationTarget = Parameters<typeof router.replace>[0];
 
 const items = [
   {
@@ -13,6 +15,13 @@ const items = [
     icon: 'compass-outline' as const,
     activeIcon: 'compass' as const,
     path: '/' as const,
+  },
+  {
+    key: 'history' as const,
+    label: 'History',
+    icon: 'time-outline' as const,
+    activeIcon: 'time' as const,
+    path: '/history' as const,
   },
   {
     key: 'library' as const,
@@ -46,7 +55,7 @@ export default function BottomNavigation({ active }: BottomNavigationProps) {
             accessibilityState={{ selected }}
             onPress={() => {
               if (!selected) {
-                router.replace(item.path);
+                router.replace(item.path as NavigationTarget);
               }
             }}
             style={{

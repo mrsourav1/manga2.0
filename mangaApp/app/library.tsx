@@ -337,7 +337,7 @@ export default function LibraryScreen() {
                 marginTop: 5,
               }}
             >
-              Pick up exactly where you stopped.
+              Keep the titles you intentionally saved.
             </Text>
 
             <FlatList
@@ -509,7 +509,7 @@ export default function LibraryScreen() {
                   >
                     {error ||
                       (entries.length === 0
-                        ? 'Add a manga from its details page or start reading a chapter.'
+                        ? 'Add manga from their details page to keep them here.'
                         : 'Choose another filter to see the rest of your library.')}
                   </Text>
                   {entries.length === 0 ? (

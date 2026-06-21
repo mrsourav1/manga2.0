@@ -53,6 +53,9 @@ export default function RootLayout() {
           <Stack.Screen name="library" options={{
             headerShown: false,
           }} />
+          <Stack.Screen name="history" options={{
+            headerShown: false,
+          }} />
           <Stack.Screen name="manga" options={{
             headerShown: false,
           }} />

@@ -36,6 +36,7 @@ const MangaDetail = () => {
     const {
         addManga,
         getEntry,
+        getHistoryEntry,
         isChapterRead,
         removeManga,
         setChapterRead,
@@ -101,6 +102,22 @@ const MangaDetail = () => {
         [data]
     );
     const libraryEntry = mangaId ? getEntry(mangaId) : null;
+    const historyEntry = mangaId ? getHistoryEntry(mangaId) : null;
+    const continueChapter = libraryEntry?.lastReadChapterUrl
+        ? {
+            title: libraryEntry.lastReadChapterTitle || 'Continue reading',
+            url: libraryEntry.lastReadChapterUrl,
+            chapterNumber: libraryEntry.lastReadChapterNumber,
+            date: null,
+        }
+        : historyEntry
+            ? {
+                title: historyEntry.lastReadChapterTitle,
+                url: historyEntry.lastReadChapterUrl,
+                chapterNumber: historyEntry.lastReadChapterNumber,
+                date: null,
+            }
+            : null;
 
     useEffect(() => {
         if (!libraryEntry || !librarySnapshot) return;
@@ -115,7 +132,6 @@ const MangaDetail = () => {
         const chapterSnapshot = chapter ? toChapterSnapshot(chapter) : null;
         if (!chapterSnapshot || !librarySnapshot) return;
 
-        await addManga(librarySnapshot);
         router.push({
             pathname: '/manga/[...slug]',
             params: {
@@ -148,7 +164,7 @@ const MangaDetail = () => {
 
         Alert.alert(
             'Remove from library?',
-            'Reading progress for this manga will also be removed from this device.',
+            'This will remove it from your saved library, but reading history will stay on this device.',
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -163,10 +179,6 @@ const MangaDetail = () => {
     const handleChapterReadToggle = async (chapter: Chapter) => {
         const chapterSnapshot = toChapterSnapshot(chapter);
         if (!chapterSnapshot || !librarySnapshot) return;
-
-        if (!libraryEntry) {
-            await addManga(librarySnapshot);
-        }
 
         await setChapterRead(
             librarySnapshot.mangaId,
@@ -414,15 +426,10 @@ const MangaDetail = () => {
                         >
                             Jump to the latest chapter or begin from chapter one.
                         </Text>
-                        {libraryEntry?.lastReadChapterUrl ? (
+                        {continueChapter ? (
                             <Pressable
                                 onPress={() =>
-                                    void openChapter({
-                                        title: libraryEntry.lastReadChapterTitle || 'Continue reading',
-                                        url: libraryEntry.lastReadChapterUrl || '',
-                                        chapterNumber: libraryEntry.lastReadChapterNumber,
-                                        date: null,
-                                    })
+                                    void openChapter(continueChapter)
                                 }
                                 style={{
                                     minHeight: 52,
@@ -440,7 +447,7 @@ const MangaDetail = () => {
                                     numberOfLines={1}
                                     style={{ color: '#d1fae5', fontSize: 11, marginTop: 4 }}
                                 >
-                                    {libraryEntry.lastReadChapterTitle}
+                                    {continueChapter.title}
                                 </Text>
                             </Pressable>
                         ) : null}

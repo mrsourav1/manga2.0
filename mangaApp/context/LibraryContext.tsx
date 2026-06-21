@@ -15,6 +15,7 @@ import {
   type LibraryStatus,
   loadLibraryState,
   recordChapterProgress,
+  type ReadingHistoryEntry,
   removeMangaFromLibrary,
   saveMangaToLibrary,
   setChapterReadState,
@@ -23,9 +24,11 @@ import {
 
 type LibraryContextValue = {
   entries: LibraryEntry[];
+  historyEntries: ReadingHistoryEntry[];
   initializing: boolean;
   error: string | null;
   getEntry: (mangaId: string) => LibraryEntry | null;
+  getHistoryEntry: (mangaId: string) => ReadingHistoryEntry | null;
   isChapterRead: (mangaId: string, chapterUrl: string) => boolean;
   addManga: (snapshot: LibraryMangaSnapshot) => Promise<void>;
   removeManga: (mangaId: string) => Promise<void>;
@@ -47,6 +50,7 @@ const LibraryContext = createContext<LibraryContextValue | null>(null);
 
 export function LibraryProvider({ children }: PropsWithChildren) {
   const [entries, setEntries] = useState<LibraryEntry[]>([]);
+  const [historyEntries, setHistoryEntries] = useState<ReadingHistoryEntry[]>([]);
   const [readChapterKeys, setReadChapterKeys] = useState<Set<string>>(new Set());
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +59,7 @@ export function LibraryProvider({ children }: PropsWithChildren) {
     try {
       const state = await loadLibraryState();
       setEntries(state.entries);
+      setHistoryEntries(state.historyEntries);
       setReadChapterKeys(
         new Set(
           state.readChapterUrls.map(
@@ -86,10 +91,13 @@ export function LibraryProvider({ children }: PropsWithChildren) {
   const value = useMemo<LibraryContextValue>(
     () => ({
       entries,
+      historyEntries,
       initializing,
       error,
       getEntry: mangaId =>
         entries.find(entry => entry.mangaId === mangaId) ?? null,
+      getHistoryEntry: mangaId =>
+        historyEntries.find(entry => entry.mangaId === mangaId) ?? null,
       isChapterRead: (mangaId, chapterUrl) =>
         readChapterKeys.has(`${mangaId}\u0000${chapterUrl}`),
       addManga: snapshot => mutate(() => saveMangaToLibrary(snapshot)),
@@ -104,7 +112,15 @@ export function LibraryProvider({ children }: PropsWithChildren) {
         mutate(() => setChapterReadState(mangaId, chapter, isRead)),
       reload,
     }),
-    [entries, error, initializing, mutate, readChapterKeys, reload]
+    [
+      entries,
+      error,
+      historyEntries,
+      initializing,
+      mutate,
+      readChapterKeys,
+      reload,
+    ]
   );
 
   return (
