@@ -2,8 +2,9 @@ import Constants from 'expo-constants';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, Pressable, Text, View } from 'react-native';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { TestIds } from 'react-native-google-mobile-ads';
 import ChapterCard from '../../components/ChapterCard';
+import CollapsibleBannerAd from '../../components/CollapsibleBannerAd';
 import { useLibrary } from '../../context/LibraryContext';
 import type { LibraryStatus } from '../../services/libraryDatabase';
 import { getDetailImageUri, getOriginalImageUri } from '../../services/imageUrls';
@@ -240,15 +241,10 @@ const MangaDetail = () => {
                 keyExtractor={(item) => item.url}
                 ListHeaderComponent={
                     <>
-                    <BannerAd
+                    <CollapsibleBannerAd
                         unitId={adUnitId}
-                        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-                        onAdLoaded={() => {
-                            console.log('Detail banner loaded');
-                        }}
-                        onAdFailedToLoad={(error) => {
-                            console.log('Detail banner failed to load', error);
-                        }}
+                        label="Detail"
+                        containerStyle={{ alignItems: 'center', paddingVertical: 8 }}
                     />
 
                     <View style={{ alignItems: 'center', paddingTop: 6 }}>

@@ -19,6 +19,7 @@ import {
 } from '../services/libraryDatabase';
 import { getCardImageUri, getOriginalImageUri } from '../services/imageUrls';
 import { toLibrarySnapshot } from '../services/librarySnapshots';
+import { openMangaDescription } from '../services/mangaNavigation';
 import { getMangaDetails } from '../services/mangaServices';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -58,7 +59,7 @@ const LibraryCard = ({ entry }: { entry: LibraryEntry }) => {
 
   const continueReading = () => {
     if (!entry.lastReadChapterUrl) {
-      router.push(`/mangaInfo/${entry.mangaId}`);
+      void openMangaDescription(entry.mangaId);
       return;
     }
 
@@ -91,7 +92,7 @@ const LibraryCard = ({ entry }: { entry: LibraryEntry }) => {
         padding: 12,
       }}
     >
-      <Pressable onPress={() => router.push(`/mangaInfo/${entry.mangaId}`)}>
+      <Pressable onPress={() => void openMangaDescription(entry.mangaId)}>
         <Image
           source={{
             uri:
@@ -105,6 +106,8 @@ const LibraryCard = ({ entry }: { entry: LibraryEntry }) => {
             backgroundColor: '#1e293b',
           }}
           resizeMode="cover"
+          fadeDuration={0}
+          progressiveRenderingEnabled
           onError={() => {
             if (imageUri !== fallbackImage) {
               setImageUri(fallbackImage);
@@ -204,7 +207,7 @@ const LibraryCard = ({ entry }: { entry: LibraryEntry }) => {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => router.push(`/mangaInfo/${entry.mangaId}`)}
+            onPress={() => void openMangaDescription(entry.mangaId)}
             style={{
               width: 40,
               height: 40,

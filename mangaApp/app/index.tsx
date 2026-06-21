@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { startTransition, useCallback, useDeferredValue, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,12 +12,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { TestIds } from 'react-native-google-mobile-ads';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import BottomNavigation from '../components/BottomNavigation';
+import CollapsibleBannerAd from '../components/CollapsibleBannerAd';
 import MangaCard from '../components/MangaCard';
 import "../global.css";
 import { useColorScheme } from '../hooks/useColorScheme';
+import { openMangaDescription } from '../services/mangaNavigation';
 import { getHomePage, searchManga } from '../services/mangaServices';
 const bannerAdUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : Constants?.expoConfig?.extra?.adUnitBanner || process.env.AD_UNIT_BANNER;
 
@@ -231,7 +233,7 @@ export default function Index() {
   }, [deferredSearchText, searchVisible]);
 
   const mangaPageHandler = (mangaId: string) => {
-    router.push(`/mangaInfo/${mangaId}`);
+    void openMangaDescription(mangaId);
   };
 
   return (
@@ -350,9 +352,9 @@ export default function Index() {
               contentContainerStyle={{ paddingBottom: 18, flexGrow: 1 }}
               removeClippedSubviews
               initialNumToRender={6}
-              maxToRenderPerBatch={6}
-              windowSize={7}
-              updateCellsBatchingPeriod={50}
+              maxToRenderPerBatch={4}
+              windowSize={5}
+              updateCellsBatchingPeriod={80}
               keyboardShouldPersistTaps="handled"
               refreshControl={
                 <RefreshControl
@@ -467,7 +469,7 @@ export default function Index() {
                 endReachedDuringMomentum.current = true;
                 loadMore();
               }}
-              onEndReachedThreshold={0.5}
+              onEndReachedThreshold={0.35}
               ListFooterComponent={
                 loading && data.length > 0 ? (
                   <ActivityIndicator size="large" color="#FF9900" />
@@ -480,8 +482,10 @@ export default function Index() {
             />
           </View>
 
-          <View
-            style={{
+          <CollapsibleBannerAd
+            unitId={bannerAdUnitId}
+            label="Home"
+            containerStyle={{
               borderTopWidth: 1,
               borderTopColor: borderColor,
               backgroundColor: cardSurface,
@@ -489,18 +493,7 @@ export default function Index() {
               paddingBottom: 8,
               alignItems: 'center',
             }}
-          >
-            <BannerAd
-              unitId={bannerAdUnitId}
-              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-              onAdLoaded={() => {
-                console.log('Home banner loaded');
-              }}
-              onAdFailedToLoad={(error) => {
-                console.log('Home banner failed to load', error);
-              }}
-            />
-          </View>
+          />
           <BottomNavigation active="home" />
         </SafeAreaView>
       </SafeAreaProvider>

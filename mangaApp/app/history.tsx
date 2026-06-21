@@ -17,6 +17,7 @@ import type {
   LibraryMangaSnapshot,
   ReadingHistoryEntry,
 } from '../services/libraryDatabase';
+import { openMangaDescription } from '../services/mangaNavigation';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -99,7 +100,7 @@ const HistoryCard = ({ entry, isSaved, saving, onSave }: HistoryCardProps) => {
         padding: 12,
       }}
     >
-      <Pressable onPress={() => router.push(`/mangaInfo/${entry.mangaId}`)}>
+      <Pressable onPress={() => void openMangaDescription(entry.mangaId)}>
         <Image
           source={{
             uri:
@@ -113,6 +114,8 @@ const HistoryCard = ({ entry, isSaved, saving, onSave }: HistoryCardProps) => {
             backgroundColor: '#1e293b',
           }}
           resizeMode="cover"
+          fadeDuration={0}
+          progressiveRenderingEnabled
           onError={() => {
             if (imageUri !== fallbackImage) {
               setImageUri(fallbackImage);
@@ -201,7 +204,7 @@ const HistoryCard = ({ entry, isSaved, saving, onSave }: HistoryCardProps) => {
           </Pressable>
 
           <Pressable
-            onPress={isSaved ? () => router.push(`/mangaInfo/${entry.mangaId}`) : onSave}
+            onPress={isSaved ? () => void openMangaDescription(entry.mangaId) : onSave}
             disabled={saving}
             style={{
               width: 40,

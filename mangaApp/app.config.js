@@ -4,7 +4,7 @@ export default {
   expo: {
     name: 'MangaFy',
     slug: 'MangaFy',
-    version: '1.1.2',
+    version: '1.1.3',
     orientation: 'portrait',
     scheme: 'com.sourav.mangafy',
     icon: './assets/images/adaptive-first.png',
@@ -40,6 +40,7 @@ export default {
     extra: {
       adUnitBanner: process.env.AD_UNIT_BANNER,
       adUnitOpen: process.env.AD_UNIT_OPEN,
+      adUnitInterstitial: process.env.AD_UNIT_INTERSTITIAL,
       backendURL: process.env.EXPO_PUBLIC_BACKEND_URL,
       MangaURL: process.env.EXPO_PUBLIC_MANGA_URL,
     },

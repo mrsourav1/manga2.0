@@ -43,6 +43,7 @@ jobs:
       EXPO_PUBLIC_MANGA_URL: ${{ secrets.APP_MANGA_URL }}
       AD_UNIT_BANNER: ${{ secrets.APP_AD_UNIT_BANNER }}
       AD_UNIT_OPEN: ${{ secrets.APP_AD_UNIT_OPEN }}
+      AD_UNIT_INTERSTITIAL: ${{ secrets.APP_AD_UNIT_INTERSTITIAL }}
       MANGAFY_RELEASE_STORE_FILE: ${{ github.workspace }}/mangaApp/android/app/mangafy-release.keystore
       MANGAFY_RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       MANGAFY_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}

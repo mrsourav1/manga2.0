@@ -9,6 +9,7 @@ import AppOpenAdManager from '../components/AppOpenAdManager';
 import AppUpdatePrompt from '../components/AppUpdatePrompt';
 import { LibraryProvider } from '../context/LibraryContext';
 import { useColorScheme } from '../hooks/useColorScheme.web';
+import { preloadDescriptionInterstitial } from '../services/descriptionInterstitial';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -28,6 +29,7 @@ export default function RootLayout() {
 
         await mobileAds().initialize();
         setAdsInitialized(true);
+        preloadDescriptionInterstitial();
       } catch (error) {
         console.log('Mobile Ads initialization failed', error);
       }

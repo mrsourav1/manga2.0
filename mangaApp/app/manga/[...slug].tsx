@@ -38,7 +38,7 @@ const buildReaderHtml = (imageUrls: string[]) => {
           <img
             src="${escapeHtml(uri)}"
             alt="Chapter page ${index + 1}"
-            loading="eager"
+            loading="${index < 3 ? 'eager' : 'lazy'}"
             decoding="async"
           />
         </figure>
@@ -84,6 +84,8 @@ const buildReaderHtml = (imageUrls: string[]) => {
           padding: 0;
           line-height: 0;
           font-size: 0;
+          content-visibility: auto;
+          contain-intrinsic-size: 1200px;
         }
 
         img {
@@ -461,7 +463,7 @@ export default function ChapterReader() {
             javaScriptEnabled
             domStorageEnabled={false}
             cacheEnabled
-            androidLayerType="software"
+            androidLayerType="hardware"
             mixedContentMode="always"
             scalesPageToFit
             setBuiltInZoomControls

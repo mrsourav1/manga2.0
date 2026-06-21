@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { getCardImageUri, getOriginalImageUri } from '../services/imageUrls';
+import { openMangaDescription } from '../services/mangaNavigation';
 
 interface MangaCardProps {
     Img: string | null;
@@ -56,7 +57,7 @@ const MangaCard: React.FC<MangaCardProps> = ({
             }}
         >
             <Pressable
-                onPress={() => router.push(`/mangaInfo/${mangaId}`)}
+                onPress={() => void openMangaDescription(mangaId)}
                 style={{ width: '100%' }}
             >
                 <Image
@@ -64,7 +65,8 @@ const MangaCard: React.FC<MangaCardProps> = ({
                     style={{ width: '100%', aspectRatio: 0.72, backgroundColor: '#CBD5E1' }}
                     resizeMode='cover'
                     resizeMethod='scale'
-                    fadeDuration={500}
+                    fadeDuration={0}
+                    progressiveRenderingEnabled
                     onError={() => {
                         if (imageUri !== fallbackImageUri) {
                             setImageUri(fallbackImageUri);
